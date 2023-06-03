@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@parcel/transformer-glsl": "^2.8.3",
+    "lil-gui": "^0.18.1",
+    "parcel": "^2.8.3"
+  },
+  "dependencies": {
+    "gsap": "^3.11.5",
+    "three": "^0.152.2"
+  }
+}
