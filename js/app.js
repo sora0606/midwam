@@ -1,13 +1,15 @@
 import * as THREE from 'three';
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 import vertex from "./shader/vertex.glsl"
 import fragment from "./shader/fragment.glsl"
 
 import GUI from "lil-gui";
 import { gsap } from 'gsap';
+
+import model from '../human.glb'
 
 export default class Sketch {
     constructor(opstions) {
@@ -20,14 +22,14 @@ export default class Sketch {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setSize(this.width, this.height);
-        this.renderer.setClearColor(0xeeeeee, 1);
+        this.renderer.setClearColor(0x010101, 1);
 
         this.container.appendChild(this.renderer.domElement);
 
 
         this.camera = new THREE.PerspectiveCamera(
             70,
-            window.innerWidth / window.innerHeight,
+            this.width / this.height,
             0.001,
             1000.0
         );
@@ -37,7 +39,8 @@ export default class Sketch {
         this.time = 0;
 
         this.dracoLoader = new DRACOLoader();
-        this.dracoLoader.setDecoderPath('https://rawgithubusercontent.com/mrdoob/three.js/dev/examples/js/libs/draco');
+        this.dracoLoader.setDecoderPath('https://raw.githubusercontent.com/mrdoob/three.js/r147/examples/js/libs/draco/');
+
         this.gltf = new GLTFLoader();
         this.gltf.setDRACOLoader(this.dracoLoader);
 
@@ -47,7 +50,7 @@ export default class Sketch {
         this.resize();
         this.render();
         this.setupResize();
-        this.settings();
+        // this.settings();
     }
 
     settings() {
@@ -73,29 +76,18 @@ export default class Sketch {
     }
 
     addObjects() {
-        let that = this;
-        this.material = new THREE.ShaderMaterial({
-            extensions: {
-                derivatives: "#extension GL_OES_standard_derivatives : enable"
-            },
-            side: THREE.DoubleSide,
-            uniforms: {
-                time: { value: 0 },
-                resolution: { value: new THREE.Vector4() },
-            },
-            // wireframe: true,
-            // transparent: true,
-            vertexShader: vertex,
-            fragmentShader: fragment,
+        this.gltf.load(model, (gltf) => {
+            this.scene.add(gltf.scene);
+            this.human = gltf.scene.children[0];
+            this.human.scale.set(0.1, 0.1, 0.1);
+            this.human.geometry.center();
+            this.human.material = new THREE.MeshBasicMaterial({
+                color: 0xff6600,
+            });
         });
-
-        this.geometry = new THREE.PlaneGeometry(1.0, 1.0, 1.0, 1.0);
-
-        this.plane = new THREE.Mesh(this.geometry, this.material);
-        this.scene.add(this.plane);
     }
 
-    addLight(){
+    addLight() {
         const light1 = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(light1);
 
@@ -117,8 +109,7 @@ export default class Sketch {
 
     render() {
         if (!this.isPlaying) return;
-        this.time += 0.01;
-
+        this.time += 0.05;
         requestAnimationFrame(this.render.bind(this));
         this.renderer.render(this.scene, this.camera);
     }
